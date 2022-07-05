@@ -975,6 +975,7 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 				tosend[p] = struct{}{}
 			}
 		}
+		log.Infof("Publish floodPublish %d from == host")
 	} else {
 		// direct peers
 		for p := range gs.direct {
@@ -990,6 +991,7 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 				tosend[p] = struct{}{}
 			}
 		}
+		log.Infof("Publish floodsub %d %v", len(tmap), tmap)
 
 		// gossipsub peers
 		gmap, ok := gs.mesh[topic]
@@ -1014,6 +1016,7 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 		for p := range gmap {
 			tosend[p] = struct{}{}
 		}
+		log.Infof("Publish gossipsub %d %v", len(gmap), gmap)
 	}
 
 	out := rpcWithMessages(msg.Message)
