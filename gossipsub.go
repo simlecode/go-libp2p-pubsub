@@ -508,7 +508,7 @@ func (gs *GossipSubRouter) Attach(p *PubSub) {
 }
 
 func (gs *GossipSubRouter) AddPeer(p peer.ID, proto protocol.ID) {
-	log.Debugf("PEERUP: Add new peer %s using %s", p, proto)
+	log.Errorf("PEERUP: Add new peer %s using %s", p, proto)
 	gs.tracer.AddPeer(p, proto)
 	gs.peers[p] = proto
 
@@ -537,7 +537,7 @@ loop:
 }
 
 func (gs *GossipSubRouter) RemovePeer(p peer.ID) {
-	log.Debugf("PEERDOWN: Remove disconnected peer %s", p)
+	log.Errorf("PEERDOWN: Remove disconnected peer %s", p)
 	gs.tracer.RemovePeer(p)
 	delete(gs.peers, p)
 	for _, peers := range gs.mesh {
@@ -931,7 +931,7 @@ func (gs *GossipSubRouter) connector() {
 				continue
 			}
 
-			log.Debugf("connecting to %s", ci.p)
+			log.Errorf("connecting to %s", ci.p)
 			cab, ok := peerstore.GetCertifiedAddrBook(gs.p.host.Peerstore())
 			if ok && ci.spr != nil {
 				_, err := cab.ConsumePeerRecord(ci.spr, peerstore.TempAddrTTL)
@@ -946,6 +946,7 @@ func (gs *GossipSubRouter) connector() {
 			if err != nil {
 				log.Debugf("error connecting to %s: %s", ci.p, err)
 			}
+			log.Errorf("connecting to %s success", ci.p)
 
 		case <-gs.p.ctx.Done():
 			return
@@ -1031,7 +1032,7 @@ func (gs *GossipSubRouter) Join(topic string) {
 		return
 	}
 
-	log.Debugf("JOIN %s", topic)
+	log.Errorf("JOIN %s", topic)
 	gs.tracer.Join(topic)
 
 	gmap, ok = gs.fanout[topic]
@@ -1070,7 +1071,7 @@ func (gs *GossipSubRouter) Join(topic string) {
 	}
 
 	for p := range gmap {
-		log.Debugf("JOIN: Add mesh link to %s in %s", p, topic)
+		log.Infof("JOIN: Add mesh link to %s in %s", p, topic)
 		gs.tracer.Graft(p, topic)
 		gs.sendGraft(p, topic)
 	}
@@ -1082,13 +1083,13 @@ func (gs *GossipSubRouter) Leave(topic string) {
 		return
 	}
 
-	log.Debugf("LEAVE %s", topic)
+	log.Errorf("LEAVE %s", topic)
 	gs.tracer.Leave(topic)
 
 	delete(gs.mesh, topic)
 
 	for p := range gmap {
-		log.Debugf("LEAVE: Remove mesh link to %s in %s", p, topic)
+		log.Errorf("LEAVE: Remove mesh link to %s in %s", p, topic)
 		gs.tracer.Prune(p, topic)
 		gs.sendPrune(p, topic)
 	}
@@ -1154,7 +1155,7 @@ func (gs *GossipSubRouter) sendRPC(p peer.ID, out *RPC) {
 }
 
 func (gs *GossipSubRouter) doDropRPC(rpc *RPC, p peer.ID, reason string) {
-	log.Debugf("dropping message to peer %s: %s", p.Pretty(), reason)
+	log.Infof("dropping message to peer %s: %s", p.Pretty(), reason)
 	gs.tracer.DropRPC(rpc, p)
 	// push control messages that need to be retried
 	ctl := rpc.GetControl()
@@ -1364,7 +1365,7 @@ func (gs *GossipSubRouter) heartbeat() {
 		}
 
 		graftPeer := func(p peer.ID) {
-			log.Debugf("HEARTBEAT: Add mesh link to %s in %s", p, topic)
+			log.Infof("HEARTBEAT: Add mesh link to %s in %s", p, topic)
 			gs.tracer.Graft(p, topic)
 			peers[p] = struct{}{}
 			topics := tograft[p]
@@ -1374,7 +1375,7 @@ func (gs *GossipSubRouter) heartbeat() {
 		// drop all peers with negative score, without PX
 		for p := range peers {
 			if score(p) < 0 {
-				log.Debugf("HEARTBEAT: Prune peer %s with negative score [score = %f, topic = %s]", p, score(p), topic)
+				log.Infof("HEARTBEAT: Prune peer %s with negative score [score = %f, topic = %s]", p, score(p), topic)
 				prunePeer(p)
 				noPX[p] = true
 			}
@@ -1455,7 +1456,7 @@ func (gs *GossipSubRouter) heartbeat() {
 
 			// prune the excess peers
 			for _, p := range plst[gs.params.D:] {
-				log.Debugf("HEARTBEAT: Remove mesh link to %s in %s", p, topic)
+				log.Infof("HEARTBEAT: Remove mesh link to %s in %s", p, topic)
 				prunePeer(p)
 			}
 		}
@@ -1516,7 +1517,7 @@ func (gs *GossipSubRouter) heartbeat() {
 				})
 
 				for _, p := range plst {
-					log.Debugf("HEARTBEAT: Opportunistically graft peer %s on topic %s", p, topic)
+					log.Infof("HEARTBEAT: Opportunistically graft peer %s on topic %s", p, topic)
 					graftPeer(p)
 				}
 			}

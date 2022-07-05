@@ -77,6 +77,15 @@ func (p *PubSub) handleNewStream(s network.Stream) {
 		}
 
 		rpc.from = peer
+		var subs []*pb.RPC_SubOpts
+		var pubs []*pb.Message
+		if len(rpc.GetSubscriptions()) != 0 {
+			subs = rpc.GetSubscriptions()
+		}
+		if len(rpc.GetPublish()) != 0 {
+			pubs = rpc.GetPublish()
+		}
+		log.Warnf("handleNewStream peer %s, subs %d %v, %d %v", peer, len(subs), subs, len(pubs), pubs)
 		select {
 		case p.incoming <- rpc:
 		case <-p.ctx.Done():
