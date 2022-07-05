@@ -88,12 +88,16 @@ func (p *PubSub) handleNewStream(s network.Stream) {
 			if sub.GetTopicid() == "/fil/blocks/calibrationnet" {
 				subs = append(subs, sub)
 			}
+		}
+		if len(subs) > 0 {
 			log.Warnf("handleNewStream peer %s, subs %d %v", peer, len(subs), subs)
 		}
 		for _, msg := range rpc.GetPublish() {
 			if msg.GetTopic() == "/fil/blocks/calibrationnet" {
 				pubs = append(pubs, message{msg.GetTopic(), string(msg.GetFrom())})
 			}
+		}
+		if len(pubs) > 0 {
 			log.Warnf("handleNewStream peer %s, pubs %d %v", peer, len(pubs), pubs)
 		}
 		select {
