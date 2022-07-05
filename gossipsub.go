@@ -985,13 +985,20 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 			}
 		}
 
+		var filter string
+
 		// floodsub peers
 		for p := range tmap {
-			if !gs.feature(GossipSubFeatureMesh, gs.peers[p]) && gs.score.Score(p) >= gs.publishThreshold {
+			fea := gs.feature(GossipSubFeatureMesh, gs.peers[p])
+			thre := gs.score.Score(p) >= gs.publishThreshold
+			if !fea && thre {
 				tosend[p] = struct{}{}
+			} else {
+				filter += fmt.Sprintf("%s: %v %v; ", p.String(), fea, thre)
 			}
 		}
 		log.Infof("Publish floodsub %d %v", len(tmap), tmap)
+		log.Infof("Publish floodsub filters %s", filter)
 
 		// gossipsub peers
 		gmap, ok := gs.mesh[topic]
