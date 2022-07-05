@@ -91,9 +91,9 @@ func (p *PubSub) handleNewStream(s network.Stream) {
 				subs = append(subs, sub)
 			}
 		}
-		// if len(subs) > 0 {
-		// 	log.Warnf("handleNewStream peer %s, subs %d %v", peer, len(subs), subs)
-		// }
+		if len(subs) > 0 {
+			log.Warnf("handleNewStream peer %s, subs %d %v", peer, len(subs), subs)
+		}
 		for _, msg := range rpc.GetPublish() {
 			if msg.GetTopic() == "/fil/blocks/calibrationnet" {
 				id, _ := lpeer.IDFromBytes(msg.GetFrom())
