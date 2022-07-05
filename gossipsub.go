@@ -1017,12 +1017,18 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 	}
 
 	out := rpcWithMessages(msg.Message)
+	sended := make([]peer.ID, 0, len(tosend))
 	for pid := range tosend {
 		if pid == from || pid == peer.ID(msg.GetFrom()) {
 			continue
 		}
 
 		gs.sendRPC(pid, out)
+
+		sended = append(sended, pid)
+	}
+	if msg.GetTopic() == "/fil/blocks/calibrationnet" {
+		log.Infof("Publish sended %v", sended)
 	}
 }
 
@@ -1354,6 +1360,8 @@ func (gs *GossipSubRouter) heartbeat() {
 		return s
 	}
 
+	peerScore := make(map[peer.ID]float64, 0)
+
 	// maintain the mesh for topics we have joined
 	for topic, peers := range gs.mesh {
 		prunePeer := func(p peer.ID) {
@@ -1381,6 +1389,7 @@ func (gs *GossipSubRouter) heartbeat() {
 			}
 		}
 
+		log.Infof("heartbeat topic %s curr peers %d, Dlo %d, Dhi %d", topic, len(peers), gs.params.Dlo, gs.params.Dhi)
 		// do we have enough peers?
 		if l := len(peers); l < gs.params.Dlo {
 			backoff := gs.backoff[topic]
@@ -1397,6 +1406,7 @@ func (gs *GossipSubRouter) heartbeat() {
 				graftPeer(p)
 			}
 		}
+		log.Infof("heartbeat topic %s after fill curr peers %d", topic, len(peers))
 
 		// do we have too many peers?
 		if len(peers) > gs.params.Dhi {
@@ -1407,6 +1417,11 @@ func (gs *GossipSubRouter) heartbeat() {
 			sort.Slice(plst, func(i, j int) bool {
 				return score(plst[i]) > score(plst[j])
 			})
+
+			for p := range peers {
+				peerScore[p] = gs.score.Score(p)
+			}
+			log.Infof("heartbeat after sort topic %s %v", topic, peerScore)
 
 			// We keep the first D_score peers by score and the remaining up to D randomly
 			// under the constraint that we keep D_out peers in the mesh (if we have that many)
