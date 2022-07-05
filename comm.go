@@ -76,14 +76,23 @@ func (p *PubSub) handleNewStream(s network.Stream) {
 			return
 		}
 
+		type message struct {
+			topic string
+			from  string
+		}
+
 		rpc.from = peer
 		var subs []*pb.RPC_SubOpts
-		var pubs []*pb.Message
-		if len(rpc.GetSubscriptions()) != 0 {
-			subs = rpc.GetSubscriptions()
+		var pubs []*message
+		for _, sub := range rpc.GetSubscriptions() {
+			if sub.GetTopicid() == "/fil/blocks/calibrationnet" {
+				subs = append(subs, sub)
+			}
 		}
-		if len(rpc.GetPublish()) != 0 {
-			pubs = rpc.GetPublish()
+		for _, msg := range rpc.GetPublish() {
+			if msg.GetTopic() == "/fil/blocks/calibrationnet" {
+				pubs = append(pubs, &message{msg.GetTopic(), string(msg.GetFrom())})
+			}
 		}
 		log.Warnf("handleNewStream peer %s, subs %d %v, %d %v", peer, len(subs), subs, len(pubs), pubs)
 		select {
