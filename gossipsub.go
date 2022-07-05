@@ -1028,7 +1028,7 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 		sended = append(sended, pid)
 	}
 	if msg.GetTopic() == "/fil/blocks/calibrationnet" {
-		log.Infof("Publish sended %v", sended)
+		log.Infof("Publish tosend %v sended %v", tosend, sended)
 	}
 }
 
@@ -1406,7 +1406,7 @@ func (gs *GossipSubRouter) heartbeat() {
 				graftPeer(p)
 			}
 		}
-		log.Infof("heartbeat topic %s after fill curr peers %d", topic, len(peers))
+		//log.Infof("heartbeat topic %s after fill curr peers %d", topic, len(peers))
 
 		// do we have too many peers?
 		if len(peers) > gs.params.Dhi {
@@ -1421,7 +1421,7 @@ func (gs *GossipSubRouter) heartbeat() {
 			for p := range peers {
 				peerScore[p] = gs.score.Score(p)
 			}
-			log.Infof("heartbeat after sort topic %s %v", topic, peerScore)
+			//log.Infof("heartbeat after sort topic %s %v", topic, peerScore)
 
 			// We keep the first D_score peers by score and the remaining up to D randomly
 			// under the constraint that we keep D_out peers in the mesh (if we have that many)
