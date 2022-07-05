@@ -17,6 +17,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
+	lpeer "github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
 
 	logging "github.com/ipfs/go-log"
@@ -1041,14 +1042,22 @@ func (p *PubSub) handleIncomingRPC(rpc *RPC) {
 		p.tracer.ThrottlePeer(rpc.from)
 
 	case AcceptAll:
+		var msgs []message
 		for _, pmsg := range rpc.GetPublish() {
 			if !(p.subscribedToMsg(pmsg) || p.canRelayMsg(pmsg)) {
 				log.Debug("received message in topic we didn't subscribe to; ignoring message")
 				continue
 			}
+			if pmsg.GetTopic() == "/fil/blocks/calibrationnet" {
+				id, _ := lpeer.IDFromBytes(pmsg.GetFrom())
+				msgs = append(msgs, message{pmsg.GetTopic(), id.String()})
+			}
 
 			msg := &Message{pmsg, rpc.from, nil}
 			p.pushMsg(msg)
+		}
+		if len(msgs) > 0 {
+			log.Warnf("handleNewStream --> handleIncomingRPC %d %v", len(msgs), msgs)
 		}
 	}
 

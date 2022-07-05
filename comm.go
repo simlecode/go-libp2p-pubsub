@@ -13,6 +13,8 @@ import (
 	"github.com/libp2p/go-msgio/protoio"
 
 	"github.com/gogo/protobuf/proto"
+
+	lpeer "github.com/libp2p/go-libp2p-core/peer"
 )
 
 // get the initial RPC containing all of our subscriptions to send to new peers
@@ -37,6 +39,11 @@ func (p *PubSub) getHelloPacket() *RPC {
 		rpc.Subscriptions = append(rpc.Subscriptions, as)
 	}
 	return &rpc
+}
+
+type message struct {
+	topic string
+	from  string
 }
 
 func (p *PubSub) handleNewStream(s network.Stream) {
@@ -76,11 +83,6 @@ func (p *PubSub) handleNewStream(s network.Stream) {
 			return
 		}
 
-		type message struct {
-			topic string
-			from  string
-		}
-
 		rpc.from = peer
 		var subs []*pb.RPC_SubOpts
 		var pubs []message
@@ -89,12 +91,13 @@ func (p *PubSub) handleNewStream(s network.Stream) {
 				subs = append(subs, sub)
 			}
 		}
-		if len(subs) > 0 {
-			log.Warnf("handleNewStream peer %s, subs %d %v", peer, len(subs), subs)
-		}
+		// if len(subs) > 0 {
+		// 	log.Warnf("handleNewStream peer %s, subs %d %v", peer, len(subs), subs)
+		// }
 		for _, msg := range rpc.GetPublish() {
 			if msg.GetTopic() == "/fil/blocks/calibrationnet" {
-				pubs = append(pubs, message{msg.GetTopic(), string(msg.GetFrom())})
+				id, _ := lpeer.IDFromBytes(msg.GetFrom())
+				pubs = append(pubs, message{msg.GetTopic(), id.String()})
 			}
 		}
 		if len(pubs) > 0 {
