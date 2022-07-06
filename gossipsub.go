@@ -508,7 +508,7 @@ func (gs *GossipSubRouter) Attach(p *PubSub) {
 }
 
 func (gs *GossipSubRouter) AddPeer(p peer.ID, proto protocol.ID) {
-	log.Errorf("PEERUP: Add new peer %s using %s", p, proto)
+	log.Infof("GossipSubRouter PEERUP: Add new peer %s using %s", p, proto)
 	gs.tracer.AddPeer(p, proto)
 	gs.peers[p] = proto
 
@@ -537,7 +537,7 @@ loop:
 }
 
 func (gs *GossipSubRouter) RemovePeer(p peer.ID) {
-	log.Errorf("PEERDOWN: Remove disconnected peer %s", p)
+	log.Infof("GossipSubRouter PEERDOWN: Remove disconnected peer %s", p)
 	gs.tracer.RemovePeer(p)
 	delete(gs.peers, p)
 	for _, peers := range gs.mesh {
@@ -754,7 +754,7 @@ func (gs *GossipSubRouter) handleGraft(p peer.ID, ctl *pb.ControlMessage) []*pb.
 		// we don't GRAFT to/from direct peers; complain loudly if this happens
 		_, direct := gs.direct[p]
 		if direct {
-			log.Warnf("GRAFT: ignoring request from direct peer %s", p)
+			log.Warnf("GossipSubRouter GRAFT: ignoring request from direct peer %s", p)
 			// this is possibly a bug from non-reciprocal configuration; send a PRUNE
 			prune = append(prune, topic)
 			// but don't PX
@@ -804,7 +804,7 @@ func (gs *GossipSubRouter) handleGraft(p peer.ID, ctl *pb.ControlMessage) []*pb.
 			continue
 		}
 
-		log.Debugf("GRAFT: add mesh link from %s in %s", p, topic)
+		log.Infof("GossipSubRouter GRAFT: add mesh link from %s in %s", p, topic)
 		gs.tracer.Graft(p, topic)
 		peers[p] = struct{}{}
 	}
@@ -831,7 +831,7 @@ func (gs *GossipSubRouter) handlePrune(p peer.ID, ctl *pb.ControlMessage) {
 			continue
 		}
 
-		log.Debugf("PRUNE: Remove mesh link to %s in %s", p, topic)
+		log.Infof("GossipSubRouter PRUNE: Remove mesh link to %s in %s", p, topic)
 		gs.tracer.Prune(p, topic)
 		delete(peers, p)
 		// is there a backoff specified by the peer? if so obey it.
@@ -931,7 +931,7 @@ func (gs *GossipSubRouter) connector() {
 				continue
 			}
 
-			log.Errorf("connecting to %s", ci.p)
+			log.Infof("GossipSubRouter connecting to %s", ci.p)
 			cab, ok := peerstore.GetCertifiedAddrBook(gs.p.host.Peerstore())
 			if ok && ci.spr != nil {
 				_, err := cab.ConsumePeerRecord(ci.spr, peerstore.TempAddrTTL)
@@ -1038,7 +1038,7 @@ func (gs *GossipSubRouter) Publish(msg *Message) {
 		sended = append(sended, pid)
 	}
 	if msg.GetTopic() == "/fil/blocks/calibrationnet" {
-		log.Infof("Publish tosend %v sended %v", tosend, sended)
+		log.Infof("Publish Tosend %v Sended %v", tosend, sended)
 	}
 }
 
@@ -1048,7 +1048,7 @@ func (gs *GossipSubRouter) Join(topic string) {
 		return
 	}
 
-	log.Errorf("JOIN %s", topic)
+	log.Infof("GossipSubRouter JOIN %s", topic)
 	gs.tracer.Join(topic)
 
 	gmap, ok = gs.fanout[topic]
@@ -1099,7 +1099,7 @@ func (gs *GossipSubRouter) Leave(topic string) {
 		return
 	}
 
-	log.Errorf("LEAVE %s", topic)
+	log.Infof("GossipSubRouter LEAVE %s", topic)
 	gs.tracer.Leave(topic)
 
 	delete(gs.mesh, topic)
